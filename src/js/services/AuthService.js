@@ -6,7 +6,7 @@ export const login = (args) => {
   return axios.post(
     `${API_BASE_URL}/login`,
     {
-      username: args.username,
+      email: args.email,
       password: args.password
     },
     {
