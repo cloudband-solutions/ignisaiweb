@@ -44,16 +44,6 @@ export default TopNavigation = (props) => {
     <div className={`top-navigation ${isSidebarOpen ? "open" : "closed"}`}>
       <div className="container-fluid top-nav-inner">
         <div className="top-nav-left">
-          <button
-            type="button"
-            className="nav-icon-button"
-            onClick={() => {
-              setIsSidebarOpen(!isSidebarOpen);
-            }}
-            aria-label="Toggle sidebar"
-          >
-            <FontAwesomeIcon icon={faBars}/>
-          </button>
           <div className="service-search">
             <div className="service-search-input">
               <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon"/>
