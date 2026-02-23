@@ -12,6 +12,7 @@ import Dashboard from "./Dashboard";
 import Home from "./Home";
 import DocumentsIndex from "./modules/documents/Index";
 import DocumentsNew from "./modules/documents/New";
+import DocumentsEdit from "./modules/documents/Edit";
 import DocumentsShow from "./modules/documents/Show";
 import Settings from "./Settings";
 import Environment from "./Environment";
@@ -156,6 +157,10 @@ export default App = () => {
               <Route
                 path="/documents/:id"
                 element={<DocumentsShow/>}
+              />
+              <Route
+                path="/documents/:id/edit"
+                element={<DocumentsEdit/>}
               />
               <Route
                 path="/settings"

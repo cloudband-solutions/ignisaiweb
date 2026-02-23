@@ -3,8 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminContent from "../../commons/AdminContent";
 import Loader from "../../commons/Loader";
 import { getCurrentUser } from "../../services/AuthService";
-import { showDocument, updateDocument } from "../../services/DocumentsService";
-import DocumentsForm from "./Form";
+import ConfirmationModal from "../../commons/ConfirmationModal";
+import {
+  deleteDocument,
+  retryDocumentEnqueue,
+  showDocument,
+} from "../../services/DocumentsService";
 
 const formatBytes = (value) => {
   if (value == null || Number.isNaN(value)) return "-";
@@ -28,6 +32,9 @@ export default DocumentsShow = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const loadDocument = async () => {
     setIsLoading(true);
@@ -75,21 +82,37 @@ export default DocumentsShow = () => {
     );
   }
 
-  const handleUpdate = async (formData) => {
-    setIsLoading(true);
+  const handleRetry = async () => {
+    setIsRetrying(true);
     setErrorMessage("");
     setSuccessMessage("");
     try {
-      await updateDocument(document.id, formData);
-      setSuccessMessage("Document updated.");
+      await retryDocumentEnqueue(document.id);
+      setSuccessMessage("Document re-enqueued for embedding.");
       await loadDocument();
     } catch (error) {
       setErrorMessage(
-        error?.response?.data?.message ||
-          "Something went wrong. Please check your input."
+        error?.response?.data?.message || "Unable to re-enqueue document."
       );
     } finally {
-      setIsLoading(false);
+      setIsRetrying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      await deleteDocument(document.id);
+      navigate("/documents");
+    } catch (error) {
+      setErrorMessage(
+        error?.response?.data?.message || "Unable to delete document."
+      );
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -104,6 +127,31 @@ export default DocumentsShow = () => {
           onClick={() => navigate("/documents")}
         >
           Back to Documents
+        </button>,
+        <button
+          key="edit"
+          type="button"
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => navigate(`/documents/${document.id}/edit`)}
+        >
+          Edit
+        </button>,
+        <button
+          key="retry"
+          type="button"
+          className="btn btn-sm btn-outline-warning"
+          disabled={document.embedding_status !== "failed" || isRetrying}
+          onClick={handleRetry}
+        >
+          {isRetrying ? "Retrying..." : "Re-enqueue"}
+        </button>,
+        <button
+          key="delete"
+          type="button"
+          className="btn btn-sm btn-outline-danger"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Delete
         </button>,
       ]}
     >
@@ -139,18 +187,17 @@ export default DocumentsShow = () => {
         </div>
       </div>
 
-      <DocumentsForm
-        title="Edit Document"
-        initialValues={{
-          name: document.name || "",
-          description: document.description || "",
-          document_type: document.document_type || "",
+      <ConfirmationModal
+        show={showDeleteModal}
+        header="Delete Document"
+        content="Delete this document? This cannot be undone."
+        isLoading={isDeleting}
+        onPrimaryClicked={handleDelete}
+        onSecondaryClicked={() => {
+          if (!isDeleting) {
+            setShowDeleteModal(false);
+          }
         }}
-        isEditing
-        onSubmit={handleUpdate}
-        isLoading={isLoading}
-        errorMessage={errorMessage}
-        successMessage={successMessage}
       />
     </AdminContent>
   );

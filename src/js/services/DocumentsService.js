@@ -48,3 +48,9 @@ export const deleteDocument = (documentId) => {
     headers: buildHeaders(),
   });
 };
+
+export const retryDocumentEnqueue = (documentId) => {
+  return axios.post(`${API_BASE_URL}/documents/${documentId}/enqueue`, null, {
+    headers: buildHeaders(),
+  });
+};

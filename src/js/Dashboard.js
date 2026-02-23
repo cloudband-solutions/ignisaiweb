@@ -5,6 +5,8 @@ import AdminContent from "./commons/AdminContent";
 import Loader from "./commons/Loader";
 import { inquire } from "./services/InquiriesService";
 import { listPublicDocumentTypes } from "./services/DocumentsService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default Dashboard = () => {
   const [messages, setMessages] = useState([]);
@@ -117,8 +119,14 @@ export default Dashboard = () => {
     <AdminContent title="Ask IgnisAI">
       <div className="row g-4">
         <div className="col-12 col-lg-8">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body" style={{ minHeight: "420px" }}>
+          <div
+            className="card border-0 shadow-sm d-flex flex-column"
+            style={{ height: "calc(100vh - 220px)" }}
+          >
+            <div
+              className="card-body d-flex flex-column"
+              style={{ overflowY: "auto" }}
+            >
               {messages.length === 0 && (
                 <div className="text-center text-muted py-5">
                   <div className="mb-2 fw-bold">Start a conversation</div>
@@ -154,8 +162,11 @@ export default Dashboard = () => {
                           {message.role === "user" ? "You" : "Assistant"}
                         </span>
                       </div>
-                      <div style={{ whiteSpace: "pre-wrap" }}>
-                        {message.content || (message.role === "assistant" && "...")}
+                      <div>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content ||
+                            (message.role === "assistant" ? "..." : "")}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>
@@ -201,8 +212,11 @@ export default Dashboard = () => {
           </div>
         </div>
         <div className="col-12 col-lg-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+          <div
+            className="card border-0 shadow-sm d-flex flex-column"
+            style={{ height: "calc(100vh - 220px)" }}
+          >
+            <div className="card-body" style={{ overflowY: "auto" }}>
               <div className="fw-bold mb-2">Document Types</div>
               {!hasTypes && (
                 <div className="text-muted small">

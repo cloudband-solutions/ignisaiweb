@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminContent from "../../commons/AdminContent";
-import ConfirmationModal from "../../commons/ConfirmationModal";
 import Loader from "../../commons/Loader";
 import Pagination from "../../Pagination";
 import { getCurrentUser } from "../../services/AuthService";
-import { deleteDocument, listDocuments } from "../../services/DocumentsService";
+import { listDocuments } from "../../services/DocumentsService";
 
 const formatBytes = (value) => {
   if (value == null || Number.isNaN(value)) return "-";
@@ -27,13 +26,11 @@ export default DocumentsIndex = () => {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [confirmDeleteName, setConfirmDeleteName] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const loadDocuments = async (page = currentPage, search = query) => {
     setIsLoading(true);
@@ -72,30 +69,35 @@ export default DocumentsIndex = () => {
     loadDocuments(1, query);
   };
 
-  const confirmDelete = (document) => {
-    setConfirmDeleteId(document.id);
-    setConfirmDeleteName(document.name || "this document");
-  };
 
-  const handleDelete = async () => {
-    if (!confirmDeleteId) return;
-    setIsDeleting(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-    try {
-      await deleteDocument(confirmDeleteId);
-      setSuccessMessage("Document deleted.");
-      setConfirmDeleteId(null);
-      setConfirmDeleteName("");
-      loadDocuments(1, query);
-    } catch (error) {
-      setErrorMessage(
-        error?.response?.data?.message || "Unable to delete document."
-      );
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const typeOptions = Array.from(
+    new Set(
+      documents
+        .map((document) => document.document_type)
+        .filter((value) => value && value.trim() !== "")
+    )
+  ).sort();
+
+  const statusOptions = Array.from(
+    new Set(
+      documents
+        .map((document) => document.embedding_status)
+        .filter((value) => value && value.trim() !== "")
+    )
+  ).sort();
+
+  const filteredDocuments = documents.filter((document) => {
+    const nameMatch = query
+      ? (document.name || "").toLowerCase().includes(query.toLowerCase())
+      : true;
+    const typeMatch = typeFilter
+      ? (document.document_type || "").toLowerCase() === typeFilter.toLowerCase()
+      : true;
+    const statusMatch = statusFilter
+      ? (document.embedding_status || "").toLowerCase() === statusFilter.toLowerCase()
+      : true;
+    return nameMatch && typeMatch && statusMatch;
+  });
 
   return (
     <AdminContent
@@ -116,26 +118,58 @@ export default DocumentsIndex = () => {
       }
     >
       <form className="mb-3" onSubmit={handleSearch}>
-        <div className="input-group">
-          <input
-            className="form-control"
-            placeholder="Search by name"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <button className="btn btn-outline-secondary" type="submit">
-            Search
-          </button>
+        <div className="row g-2">
+          <div className="col-12 col-md-5">
+            <input
+              className="form-control"
+              placeholder="Filter by name"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <div className="col-12 col-md-3">
+            <select
+              className="form-select"
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value)}
+            >
+              <option value="">All document types</option>
+              {typeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-3">
+            <select
+              className="form-select"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="">All statuses</option>
+              {statusOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-1 d-grid">
+            <button className="btn btn-outline-secondary" type="submit">
+              Search
+            </button>
+          </div>
         </div>
       </form>
 
       {isLoading && documents.length === 0 && <Loader />}
 
-      {!isLoading && documents.length === 0 && (
+      {!isLoading && filteredDocuments.length === 0 && (
         <div className="alert alert-info mb-0">No documents found.</div>
       )}
 
-      {documents.length > 0 && (
+      {filteredDocuments.length > 0 && (
         <div className="table-responsive" style={{ maxHeight: "1200px" }}>
           <table className="table table-sm table-bordered table-hover">
             <thead className="table-dark sticky-top">
@@ -149,7 +183,7 @@ export default DocumentsIndex = () => {
               </tr>
             </thead>
             <tbody>
-              {documents.map((document) => (
+              {filteredDocuments.map((document) => (
                 <tr key={document.id}>
                   <td>
                     <div className="fw-bold">{document.name}</div>
@@ -176,26 +210,13 @@ export default DocumentsIndex = () => {
                     )}
                   </td>
                   <td className="text-center">
-                    {isAdmin ? (
-                      <div className="btn-group">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => navigate(`/documents/${document.id}`)}
-                        >
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => confirmDelete(document)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-muted">Restricted</span>
-                    )}
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => navigate(`/documents/${document.id}`)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -204,9 +225,6 @@ export default DocumentsIndex = () => {
         </div>
       )}
 
-      {successMessage && (
-        <div className="alert alert-success mt-3 mb-0">{successMessage}</div>
-      )}
       {errorMessage && (
         <div className="alert alert-danger mt-3 mb-0">{errorMessage}</div>
       )}
@@ -231,19 +249,6 @@ export default DocumentsIndex = () => {
         />
       </div>
 
-      <ConfirmationModal
-        show={!!confirmDeleteId}
-        header="Delete Document"
-        content={`Delete ${confirmDeleteName}? This cannot be undone.`}
-        isLoading={isDeleting}
-        onPrimaryClicked={handleDelete}
-        onSecondaryClicked={() => {
-          if (!isDeleting) {
-            setConfirmDeleteId(null);
-            setConfirmDeleteName("");
-          }
-        }}
-      />
     </AdminContent>
   );
 };
