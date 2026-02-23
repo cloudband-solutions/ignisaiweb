@@ -4,7 +4,7 @@ import AdminContent from "../../commons/AdminContent";
 import Loader from "../../commons/Loader";
 import Pagination from "../../Pagination";
 import { getCurrentUser } from "../../services/AuthService";
-import { listDocuments } from "../../services/DocumentsService";
+import { listDocuments, listPublicDocuments } from "../../services/DocumentsService";
 
 const formatBytes = (value) => {
   if (value == null || Number.isNaN(value)) return "-";
@@ -35,7 +35,8 @@ export default DocumentsIndex = () => {
   const loadDocuments = async (page = currentPage, search = query) => {
     setIsLoading(true);
     try {
-      const response = await listDocuments({
+      const listFn = isAdmin ? listDocuments : listPublicDocuments;
+      const response = await listFn({
         page,
         query: search || undefined,
       });
@@ -52,15 +53,11 @@ export default DocumentsIndex = () => {
   };
 
   useEffect(() => {
-    if (isAdmin) {
-      loadDocuments(1, "");
-    }
+    loadDocuments(1, "");
   }, [isAdmin]);
 
   useEffect(() => {
-    if (isAdmin) {
-      loadDocuments(currentPage, query);
-    }
+    loadDocuments(currentPage, query);
   }, [currentPage]);
 
   const handleSearch = (event) => {
@@ -179,6 +176,7 @@ export default DocumentsIndex = () => {
                 <th>File</th>
                 <th>Size</th>
                 <th>Status</th>
+                <th>Download</th>
                 <th className="text-center">Actions</th>
               </tr>
             </thead>
@@ -207,6 +205,20 @@ export default DocumentsIndex = () => {
                       <div className="small text-danger">
                         {document.embedding_error}
                       </div>
+                    )}
+                  </td>
+                  <td>
+                    {document.download_url ? (
+                      <a
+                        className="btn btn-sm btn-outline-secondary"
+                        href={document.download_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Download
+                      </a>
+                    ) : (
+                      <span className="text-muted">-</span>
                     )}
                   </td>
                   <td className="text-center">

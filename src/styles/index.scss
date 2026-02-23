@@ -1,6 +1,13 @@
-@use "../../node_modules/bootstrap/scss/bootstrap.scss" as bootstrap;
+@use "./variables.scss" as *;
+@use "../../node_modules/bootstrap/scss/bootstrap.scss" as bootstrap with (
+  $primary: $ateneo-blue,
+  $secondary: $ateneo-slate,
+  $warning: $ateneo-gold,
+  $info: $ateneo-blue-bright,
+  $body-bg: $ateneo-ice,
+  $body-color: $ateneo-blue-dark
+);
 @use "./bootstrap-overrides.scss" as bootstrapOverrides;
-@use "./variables.scss" as variables;
 @use "./Login.scss" as Login;
 @use "./Sidebar.scss" as Sidebar;
 @use "./TopNavigation.scss" as TopNavigation;

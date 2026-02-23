@@ -15,6 +15,8 @@ export default Dashboard = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [documentTypes, setDocumentTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [topK, setTopK] = useState(5);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const bottomRef = useRef(null);
 
   const hasTypes = documentTypes.length > 0;
@@ -82,6 +84,7 @@ export default Dashboard = () => {
       const response = await inquire({
         query,
         document_types: selectedTypes,
+        k: Number(topK) || 5,
       });
 
       const reader = response.body?.getReader();
@@ -237,6 +240,30 @@ export default Dashboard = () => {
                       <span className="form-check-label">{formatLabel(type)}</span>
                     </label>
                   ))}
+                </div>
+              )}
+              <hr />
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
+                onClick={() => setIsAdvancedOpen((prev) => !prev)}
+              >
+                <span>Advanced Settings</span>
+                <span>{isAdvancedOpen ? "−" : "+"}</span>
+              </button>
+              {isAdvancedOpen && (
+                <div className="mt-3">
+                  <label className="form-label">Top K</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-control"
+                    value={topK}
+                    onChange={(event) => setTopK(event.target.value)}
+                  />
+                  <div className="form-text">
+                    Controls how many document chunks to search.
+                  </div>
                 </div>
               )}
             </div>

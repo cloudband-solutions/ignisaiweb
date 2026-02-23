@@ -1,6 +1,6 @@
-$nav-primary-text-color: #fff;
-$nav-secondary-text-color: #A0ABC0;
-$category-color: #2975A7;
+$nav-primary-text-color: #ffffff;
+$nav-secondary-text-color: #5b6f98;
+$category-color: #2c6ef2;
 
 $logo-text-size: 1.5rem;
 $nav-text-size: .9rem;
@@ -15,9 +15,19 @@ $sidebar-item-height: calc($nav-text-size * 3.5);
 
 $logo-text-size: 1.5rem;
 
-$dark-purple: #2f243a;
-$english-violet: #444054;
-$silver: #BEBBBB;
+$ateneo-blue-dark: #0a2f6b;
+$ateneo-blue: #2c6ef2;
+$ateneo-blue-bright: #3a7af6;
+$ateneo-gold: #fdb913;
+$ateneo-ice: #f5f8ff;
+$ateneo-slate: #5f79ad;
+$ateneo-border: #c1d3f5;
+$ateneo-surface: #ffffff;
+$ateneo-surface-2: #eef3ff;
+
+$dark-purple: $ateneo-blue-dark;
+$english-violet: #143670;
+$silver: #bfc9db;
 
 // Media query sizes
 $small-screen-width: 800px;

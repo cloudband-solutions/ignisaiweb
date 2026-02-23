@@ -13,6 +13,19 @@ export const listDocuments = (params = {}) => {
   });
 };
 
+export const listPublicDocuments = (params = {}) => {
+  return axios.get(`${API_BASE_URL}/public/documents`, {
+    headers: buildHeaders(),
+    params,
+  });
+};
+
+export const showPublicDocument = (documentId) => {
+  return axios.get(`${API_BASE_URL}/public/documents/${documentId}`, {
+    headers: buildHeaders(),
+  });
+};
+
 export const showDocument = (documentId) => {
   return axios.get(`${API_BASE_URL}/documents/${documentId}`, {
     headers: buildHeaders(),

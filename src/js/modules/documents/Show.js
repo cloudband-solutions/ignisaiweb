@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import AdminContent from "../../commons/AdminContent";
 import Loader from "../../commons/Loader";
 import { getCurrentUser } from "../../services/AuthService";
@@ -8,6 +10,7 @@ import {
   deleteDocument,
   retryDocumentEnqueue,
   showDocument,
+  showPublicDocument,
 } from "../../services/DocumentsService";
 
 const formatBytes = (value) => {
@@ -35,12 +38,16 @@ export default DocumentsShow = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState("");
 
   const loadDocument = async () => {
     setIsLoading(true);
     try {
-      const response = await showDocument(id);
+      const response = isAdmin
+        ? await showDocument(id)
+        : await showPublicDocument(id);
       setDocument(response.data);
+      setDownloadUrl(response.data?.download_url || "");
     } catch (error) {
       setErrorMessage(
         error?.response?.data?.message || "Unable to load document."
@@ -56,15 +63,7 @@ export default DocumentsShow = () => {
     }
   }, [isAdmin, id]);
 
-  if (!isAdmin) {
-    return (
-      <AdminContent title="Document">
-        <div className="alert alert-warning mb-0">
-          You need admin access to manage documents.
-        </div>
-      </AdminContent>
-    );
-  }
+  const showAdminActions = isAdmin;
 
   if (isLoading && !document) {
     return (
@@ -128,31 +127,49 @@ export default DocumentsShow = () => {
         >
           Back to Documents
         </button>,
-        <button
-          key="edit"
-          type="button"
-          className="btn btn-sm btn-outline-primary"
-          onClick={() => navigate(`/documents/${document.id}/edit`)}
-        >
-          Edit
-        </button>,
-        <button
-          key="retry"
-          type="button"
-          className="btn btn-sm btn-outline-warning"
-          disabled={document.embedding_status !== "failed" || isRetrying}
-          onClick={handleRetry}
-        >
-          {isRetrying ? "Retrying..." : "Re-enqueue"}
-        </button>,
-        <button
-          key="delete"
-          type="button"
-          className="btn btn-sm btn-outline-danger"
-          onClick={() => setShowDeleteModal(true)}
-        >
-          Delete
-        </button>,
+        downloadUrl ? (
+          <a
+            key="download"
+            className="btn btn-sm btn-outline-secondary"
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
+            Download
+          </a>
+        ) : null,
+        showAdminActions ? (
+          <button
+            key="edit"
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => navigate(`/documents/${document.id}/edit`)}
+          >
+            Edit
+          </button>
+        ) : null,
+        showAdminActions ? (
+          <button
+            key="retry"
+            type="button"
+            className="btn btn-sm btn-outline-warning"
+            disabled={document.embedding_status !== "failed" || isRetrying}
+            onClick={handleRetry}
+          >
+            {isRetrying ? "Retrying..." : "Re-enqueue"}
+          </button>
+        ) : null,
+        showAdminActions ? (
+          <button
+            key="delete"
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            onClick={() => setShowDeleteModal(true)}
+          >
+            Delete
+          </button>
+        ) : null,
       ]}
     >
       <div className="row g-3 mb-4">
@@ -187,18 +204,20 @@ export default DocumentsShow = () => {
         </div>
       </div>
 
-      <ConfirmationModal
-        show={showDeleteModal}
-        header="Delete Document"
-        content="Delete this document? This cannot be undone."
-        isLoading={isDeleting}
-        onPrimaryClicked={handleDelete}
-        onSecondaryClicked={() => {
-          if (!isDeleting) {
-            setShowDeleteModal(false);
-          }
-        }}
-      />
+      {isAdmin && (
+        <ConfirmationModal
+          show={showDeleteModal}
+          header="Delete Document"
+          content="Delete this document? This cannot be undone."
+          isLoading={isDeleting}
+          onPrimaryClicked={handleDelete}
+          onSecondaryClicked={() => {
+            if (!isDeleting) {
+              setShowDeleteModal(false);
+            }
+          }}
+        />
+      )}
     </AdminContent>
   );
 };
