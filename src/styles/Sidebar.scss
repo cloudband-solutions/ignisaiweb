@@ -92,6 +92,36 @@
   transition: all 0.4s ease;
 }
 
+.sidebar .nav-links li .service-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 12px;
+}
+
+.sidebar .nav-links li .favorite-toggle {
+  background: transparent;
+  border: 0;
+  color: $nav-secondary-text-color;
+  opacity: 0.6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.sidebar .nav-links li .favorite-toggle.is-favorite {
+  color: #f6c445;
+  opacity: 1;
+}
+
+.sidebar .nav-links li:hover .favorite-toggle {
+  opacity: 1;
+}
+
+.sidebar.close .nav-links li .favorite-toggle {
+  display: none;
+}
+
 .sidebar .nav-links li:hover,
 .sidebar .nav-links li.active {
   background: $english-violet;
@@ -320,7 +350,7 @@
 }
 
 .app-main-section {
-  padding-top: 8px;
+  padding-top: calc(var(--app-top-nav-height, 0px) + var(--app-favorites-height, 0px) + 8px);
   position: relative;
   //height: 100vh;
   left: $sidebar-active-width;
